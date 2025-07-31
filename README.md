@@ -2,7 +2,7 @@
  
 Hello! This is a joint project between @Harshit-Saini0 and @Noah-Philip.
 
-We are currently working on creating a Raspberry-Pi robot that is able to navigate through a home, detects and reports the current temperatures, and is able to leverage this information using ML learning to adjust a thermostat to the user's specifications. We built this using Freenove's Tank Robot Kit as a base as well as a DHT22 temperature and humidity sensor.
+We are currently working on creating a Raspberry-Pi robot that is able to navigate through a home, detects and reports the current temperatures, and is able to leverage this information using ML to adjust a thermostat to the user's specifications. We built this using Freenove's Tank Robot Kit as a base as well as a DHT22 temperature and humidity sensor.
 
 **Hardware Used**
 - Rasperry Pi 3
