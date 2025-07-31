@@ -1,3 +1,6 @@
+# Adapted from Freenove Tank Robot Kit for Raspberry Pi
+# (c) Freenove Creative Technology Co., Ltd., used under CC BY-NC-SA 3.0 license
+
 import RPi.GPIO as GPIO
 import time
 import pigpio

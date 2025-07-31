@@ -1,3 +1,6 @@
+# Adapted from Freenove Tank Robot Kit for Raspberry Pi
+# (c) Freenove Creative Technology Co., Ltd., used under CC BY-NC-SA 3.0 license
+
 # -*-coding: utf-8 -*-
 import time
 from rpi_ws281x import *
