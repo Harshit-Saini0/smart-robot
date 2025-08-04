@@ -12,9 +12,7 @@ class Motor:
         self.pwm2 = 23
         self.pwm3 = 5
         self.pwm4 = 6
-        self.left_motor_calibration = left_motor_calibration
         
-        # Surface-specific turn timing configurations
         self.surface_timings = {
             "carpet": 0.93,
             "hardwood": 0.75,
@@ -22,8 +20,10 @@ class Motor:
             "concrete": 0.85,
             "rubber": 0.80,
             "grass": 1.10,
-            "default": 0.93
+            "default": 0.68
         }
+
+        self.left_motor_calibration = left_motor_calibration
         
         self.PwmServo = pigpio.pi()
         self.PwmServo.set_mode(self.pwm1,pigpio.OUTPUT) 
@@ -70,7 +70,6 @@ class Motor:
         return duty1,duty2
     
     def left_Wheel(self,duty):
-        # Add calibration to compensate for motor differences
         calibrated_duty = int(duty * self.left_motor_calibration)
         if calibrated_duty>0:
             self.PwmServo.set_PWM_dutycycle(self.pwm1,0)
@@ -99,7 +98,6 @@ class Motor:
         self.right_Wheel(duty2)
     
     def turn_left_90(self, surface=None):
-        """Execute a precise 90-degree left turn with surface-specific timing"""
         turn_time = self.get_turn_time(surface)
         surface_name = surface or getattr(self, 'current_surface', 'default')
         print(f"Executing 90-degree left turn on {surface_name} surface ({turn_time}s)")
@@ -108,7 +106,6 @@ class Motor:
         self.setMotorModel(0, 0)
 
     def turn_right_90(self, surface=None):
-        """Execute a precise 90-degree right turn with surface-specific timing"""
         turn_time = self.get_turn_time(surface)
         surface_name = surface or getattr(self, 'current_surface', 'default')
         print(f"Executing 90-degree right turn on {surface_name} surface ({turn_time}s)")
@@ -140,7 +137,6 @@ if __name__ == "__main__":
             elif mode == "c":
                 current_cal = PWM.left_motor_calibration
                 print(f"Current left motor calibration: {current_cal}")
-                print("Tip: Use values < 1.0 to slow down left motor (e.g., 0.9, 0.8)")
                 try:
                     new_cal = float(input("Enter new calibration value (0.1-1.5): "))
                     PWM.set_left_motor_calibration(new_cal)
@@ -156,10 +152,10 @@ if __name__ == "__main__":
                 continue
             elif mode == "9l":
                 PWM.turn_left_90()
-                continue  # don't sleep here since turn methods handle their own timing
+                continue  # don't sleep here 
             elif mode == "9r":
                 PWM.turn_right_90()
-                continue  # don't sleep here since turn methods handle their own timing
+                continue  # don't sleep here
             elif mode == "t":
                 direction = input("Enter turn direction ([L]eft, [R]ight): ").strip().lower()
                 TURN_DURATION = float(input("Enter duration for the turn (in seconds): "))

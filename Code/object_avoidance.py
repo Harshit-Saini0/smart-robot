@@ -47,30 +47,59 @@ def reverse_and_turn():
         time.sleep(0.08)
     PWM.setMotorModel(0,0)
     time.sleep(0.1)
-    PWM.setMotorModel(4000, -4000)
     print("The car is turning right")
-    time.sleep(1)
+    PWM.turn_left_90()
     PWM.setMotorModel(0,0)
 
 THRESH_EMERGENCY = 15    # cm
 THRESH_SLOW      = 25    # cm
 THRESH_MEDIUM    = 50    # cm
+MAX_RANGE      = 180   # cm
 
 
 def stop_all():
     PWM.setMotorModel(0, 0)
     led.colorWipe(led.strip, Color(0,0,0))
 
+def select_surface():
+    """Simple surface selection for turn timing"""
+    print("\nSelect surface type:")
+    surfaces = ["carpet", "hardwood", "tile", "concrete", "rubber", "grass"]
+    
+    for i, surface in enumerate(surfaces, 1):
+        timing = PWM.surface_timings[surface]
+        print(f"  {i}. {surface.capitalize()} ({timing}s)")
+    
+    while True:
+        try:
+            choice = int(input("Enter choice (1-6): "))
+            if 1 <= choice <= 6:
+                selected = surfaces[choice - 1]
+                PWM.set_surface_type(selected)
+                return selected
+            else:
+                print("Please enter 1-6")
+        except (ValueError, KeyboardInterrupt):
+            print("Using default: carpet")
+            PWM.set_surface_type("carpet")
+            return "carpet"
+
 if __name__ == '__main__':
     print('Obstacle avoidance starting')
-    #allow time for robot to be unplugged from peripherals
-    time.sleep(20)
-    #blink white as a warning
-    start_time = time.time()
+    
+    # Select surface type
+    surface = select_surface()
+    print(f"Surface: {surface}")
+    time.sleep(1)
+    
+    # Stuck detection variables
+    distance_history = []
+    stuck_threshold = 5  # Number of identical readings to trigger failsafe
+    stuck_tolerance = 2  # Allow 2cm difference to account for sensor noise
     
     try:
         #blink white when starting
-        for _ in range(3):
+        for i in range(3):
            led.colorWipe(led.strip, Color(255,255,255))
            time.sleep(0.2)
            led.colorWipe(led.strip, Color(0,0,0))
@@ -78,9 +107,44 @@ if __name__ == '__main__':
            
         
         #object avoidance loop
-        while time.time() - start_time < 10:
-            distance = int(ultrasonic.get_distance())
+        while True:
+            try:
+                raw_distance = ultrasonic.get_distance()
+                if raw_distance is None:
+                    print("No distance reading")
+                    continue
+                distance = int(raw_distance)
+                if distance <= 0:
+                    print("Invalid distance reading")
+                    continue
+            except (ValueError, TypeError) as e:
+                print(f"Distance measurement error: {e}")
+                continue
+            except Exception as e:
+                print(f"Ultrasonic sensor error: {e}")
+                continue
+            
             print("Obstacle distance is {}CM".format(distance))
+            
+            # Stuck detection
+            if distance < MAX_RANGE:
+                distance_history.append(distance)
+                if len(distance_history) > stuck_threshold:
+                    distance_history.pop(0)
+            
+            if len(distance_history) >= stuck_threshold:
+                distances_similar = all(
+                    abs(d - distance_history[0]) <= stuck_tolerance 
+                    for d in distance_history
+                )
+                if distances_similar and distance_history[0] > THRESH_EMERGENCY:
+                    print("Same distance readings - executing failsafe")
+                    led.colorWipe(led.strip, Color(255,165,0))  # Orange
+                    time.sleep(0.5)
+                    reverse_and_turn()
+                    distance_history.clear()
+                    continue
+            
             indicate_distance(distance)
 
             if distance > THRESH_MEDIUM:
